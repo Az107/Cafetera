@@ -1,0 +1,36 @@
+{
+  "get": [
+    {
+      "/health": {
+        "status": 200,
+        "body": "API is up and running"
+      }
+  },
+  {
+    "/users": {
+      "status": 200,
+      "body": [
+        {
+          "id": 1,
+          "name": "John Doe",
+          "email": "",
+          "path": "{{path}}"
+        }
+      ]
+    }
+  }
+  ],
+  "post":
+  [
+    {
+      "/users": {
+        "status": 201,
+        "body": {
+          "id": 2,
+          "name": "Jane Doe",
+          "email": ""
+        }
+      }
+    }
+  ]
+}
