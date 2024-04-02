@@ -78,7 +78,6 @@ After starting the server, it will listen for HTTP requests on the specified por
 Available wildcard variables:
 - [x] {{path}}: The path of the request
 - [ ] {{query}}: The query string of the request
-- [x] {{body}}: The body of the request
 - [x] {{rand}}: A random number between 0 and 100
 - [x] {{arg.<name>}}: The value of the query parameter with the specified name
 - [ ] {{header.<name>}}: The value of the header with the specified name
