@@ -11,12 +11,20 @@
       "status": 200,
       "body": [
         {
-          "id": 1,
-          "name": "John Doe",
+          "id": "{{rand}}",
+          "name": "{{arg.name}}",
           "email": "",
           "path": "{{path}}"
         }
       ]
+    },
+    "/users/{{name}}": {
+      "status": 200,
+      "body": {
+        "id": 1,
+        "name": "{{name}}",
+        "email": ""
+      }
     }
   }
   ],
@@ -26,7 +34,7 @@
       "/users": {
         "status": 201,
         "body": {
-          "id": 2,
+          "id": "{{rand}}",
           "name": "Jane Doe",
           "email": ""
         }

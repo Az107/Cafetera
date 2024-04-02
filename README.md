@@ -51,7 +51,7 @@ The server's behavior is defined by a JSON configuration file. Below is an examp
             "id": 1,
             "name": "John Doe",
             "email": "",
-            "path": "{{path}}" # This will be replaced with the path of the request
+            "path": "{{path}}" // This will be replaced with the path of the request
           }
         ]
       }
@@ -74,6 +74,15 @@ The server's behavior is defined by a JSON configuration file. Below is an examp
 ## Usage
 
 After starting the server, it will listen for HTTP requests on the specified port. The server matches incoming requests against the paths defined in the configuration file and responds with the corresponding status code and body.
+
+Available wildcard variables:
+- [x] {{path}}: The path of the request
+- [x] {{query}}: The query string of the request
+- [x] {{body}}: The body of the request
+- [x] {{rand}}: A random number between 0 and 100
+- [x] {{arg.<name>}}: The value of the query parameter with the specified name
+- [] {{header.<name>}}: The value of the header with the specified name
+- [] {{path.<index>}}: The value of the path parameter at the specified index
 
 ## Contributions
 

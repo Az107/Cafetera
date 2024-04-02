@@ -1,13 +1,17 @@
 mod hteapot;
 mod config_parser;
+mod utils;
 use std::env;
 
+use utils::SimpleRNG;
 use hteapot::HteaPot;
 use config_parser::{configMap, config };
 use crate::hteapot::{HttpMethod, HttpStatus};
 
 
 const DEFAULT_PORT: &str = "7878";
+
+
 
 fn main() {
         let args = std::env::args().collect::<Vec<String>>();
@@ -32,8 +36,15 @@ fn main() {
                     match response {
                         Some(response) => {
                             let status = HttpStatus::from_u16(response.status);
-                            let body = &response.body.to_string().replace("{{path}}", &req.path).replace("{{body}}", &req.body);
-                            return HteaPot::response_maker(status, body );
+                            let mut body = response.body.to_string()
+                            .replace("{{path}}", &req.path)
+                            .replace("{{body}}", &req.body)
+                            .replace("{{rand}}", SimpleRNG::new().next_range(0, 100).to_string().as_str());
+                            for (key, value) in &req.args {
+                                let _body = body.clone();
+                                body = _body.replace(&format!("{{{{arg.{key}}}}}", key=key), value);
+                            }
+                            return HteaPot::response_maker(status, &body );
                         }
                         None => {
                             return HteaPot::response_maker(HttpStatus::NotFound, "Not Found");

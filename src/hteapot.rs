@@ -227,8 +227,9 @@ impl HteaPot {
         }
 
         if path.contains('?') {
-            let mut parts = path.split('?');
-            let path = parts.next().unwrap();
+            let _path = path.clone();
+            let mut parts = _path.split('?');
+            path = parts.next().unwrap().to_string();
             let query = parts.next().unwrap();
             let query_parts: Vec<&str> = query.split('&').collect();
             for part in query_parts {
