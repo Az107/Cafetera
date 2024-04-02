@@ -81,8 +81,8 @@ Available wildcard variables:
 - [x] {{body}}: The body of the request
 - [x] {{rand}}: A random number between 0 and 100
 - [x] {{arg.<name>}}: The value of the query parameter with the specified name
-- [] {{header.<name>}}: The value of the header with the specified name
-- [] {{path.<index>}}: The value of the path parameter at the specified index
+- [ ] {{header.<name>}}: The value of the header with the specified name
+- [ ] {{path.<index>}}: The value of the path parameter at the specified index
 
 ## Contributions
 
