@@ -5,7 +5,7 @@ use std::env;
 
 use utils::SimpleRNG;
 use hteapot::HteaPot;
-use config_parser::{configMap, config };
+use config_parser::{configMap, config, responseMap };
 use crate::hteapot::{HttpMethod, HttpStatus};
 
 
@@ -16,7 +16,7 @@ const DEFAULT_PORT: &str = "7878";
 fn main() {
         let args = std::env::args().collect::<Vec<String>>();
         if args.len() != 3 {
-            println!("Usage: {} <server> <port>", args[0]);
+            println!("Usage: {} <port> <config>", args[0]);
             return;
         }
         let addr: String = String::from("0.0.0.0");
