@@ -12,23 +12,28 @@ pub struct response {
   pub status: u16,
   pub body: Value,
 }
+
+pub struct ConfigItem {
+  pub path: String,
+  pub response: response,
+}
 //pub type responseMap = HashMap<String, response>;
 
 pub trait responseMap {
-  fn get(&self, key: &str) -> Option<&response>;
+  fn get_iter(&self, key: &str) -> Option<ConfigItem>;
 }
 
 impl responseMap for HashMap<String, response> {
-  fn get(&self, key: &str) -> Option<&response> {
+  fn get_iter(&self, key: &str) -> Option<ConfigItem> {
     for (path, response) in self {
-      let match_path = compare_path(key.to_string(), path.to_string());
-      match match_path {
-        Some(_) => {
-          return Some(response);
-        }
-        None => {
-          continue;
-        }
+      if compare_path(path.to_string(), key.to_string()) {
+        let config_item = ConfigItem {
+          path: path.clone(),
+          response: response.clone(),
+        };
+        return Some(config_item);
+      } else {
+        continue;
       }
     }
     return None;
@@ -58,6 +63,7 @@ impl config for configMap{
       for element in value.as_array().unwrap() {
         let element = element.as_object().unwrap();
         let path = element.keys().next().unwrap();
+        println!("loaded path: {}", path);
         let response = element.get(path).unwrap();
         let response = response {
           status: response["status"].as_u64().unwrap() as u16,

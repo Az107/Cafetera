@@ -29,22 +29,38 @@ impl SimpleRNG {
     }
 }
 
-pub struct path_match {
-  is_match: bool,
-  params: HashMap<String, String>,
+
+
+pub fn compare_path(path: String, path2: String) -> bool {
+  let parts = path.split("/");
+  let parts2 = path2.split("/");
+  if parts.clone().count() != parts2.clone().count() {
+    return false;
+  }
+  for (part, part2) in parts.zip(parts2) {
+    if part == part2 {
+      continue;
+    } else if part.starts_with("{") && part.ends_with("}") {
+      continue;
+    } else {
+      return false;
+    }
+  }
+
+  return true;
 }
 
-pub fn compare_path(path: String, path2: String) -> Option<HashMap<String,String>> {
+pub fn get_path_args(path: String, path2: String) -> Option<HashMap<String,String>> {
   let parts = path.split("/");
   let parts2 = path2.split("/");
   let mut params = HashMap::new();
-
   for (part, part2) in parts.zip(parts2) {
     if part == part2 {
       continue;
     } else if part2.starts_with("{") && part2.ends_with("}") {
       let key = part2.trim_start_matches("{{").trim_end_matches("}}").to_string();
       params.insert(key, part.to_string());
+      continue;
     } else {
       return None;
     }

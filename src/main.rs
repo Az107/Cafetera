@@ -6,7 +6,7 @@ use std::env;
 use utils::SimpleRNG;
 use hteapot::HteaPot;
 use config_parser::{configMap, config, responseMap };
-use crate::hteapot::{HttpMethod, HttpStatus};
+use crate::{config_parser::response, hteapot::{HttpMethod, HttpStatus}};
 
 
 const DEFAULT_PORT: &str = "7878";
@@ -32,9 +32,10 @@ fn main() {
             let response = config.get(&req.method);
             match response {
                 Some(response) => {
-                    let response = response.get(&req.path);
-                    match response {
-                        Some(response) => {
+                    let config_item = response.get_iter(&req.path);
+                    match config_item {
+                        Some(config_item) => {
+                            let response = config_item.response;
                             let status = HttpStatus::from_u16(response.status);
                             let mut body = response.body.to_string()
                             .replace("{{path}}", &req.path)
@@ -43,6 +44,13 @@ fn main() {
                             for (key, value) in &req.args {
                                 let _body = body.clone();
                                 body = _body.replace(&format!("{{{{arg.{key}}}}}", key=key), value);
+                            }
+                            let path_args = utils::get_path_args(req.path.clone(), config_item.path.clone());
+                            if path_args.is_some() {
+                                for (key, value) in path_args.unwrap() {
+                                    let _body = body.clone();
+                                    body = _body.replace(&format!("{{{{{key}}}}}", key=key), &value);
+                                }
                             }
                             return HteaPot::response_maker(status, &body );
                         }

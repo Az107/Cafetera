@@ -5,23 +5,34 @@
         "status": 200,
         "body": "API is up and running"
       }
-  },
-  {
-    "/users": {
-      "status": 200,
-      "body": [
-        {
-          "id": "{{rand}}",
-          "name": "{{arg.name}}",
-          "email": "",
-          "path": "{{path}}"
-        }
-      ]
     },
+    {
+      "/users": {
+        "status": 200,
+        "body": [
+          {
+            "id": "{{rand}}",
+            "name": "{{arg.name}}",
+            "email": "",
+            "path": "{{path}}"
+          }
+        ]
+      }
+    },
+  {
     "/users/{{name}}": {
       "status": 200,
       "body": {
         "id": 1,
+        "name": "{{name}}",
+        "email": ""
+      }
+    }
+  },{
+    "/users/{{name}}/{{id}}": {
+      "status": 200,
+      "body": {
+        "id": "{{id}}",
         "name": "{{name}}",
         "email": ""
       }
