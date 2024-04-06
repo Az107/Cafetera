@@ -1,4 +1,5 @@
 # CAFETERA
+[![Test](https://github.com/Az107/Cafetera/actions/workflows/test.yml/badge.svg)](https://github.com/Az107/Cafetera/actions/workflows/test.yml)
 
 ## Description
 
