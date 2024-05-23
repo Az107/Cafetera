@@ -200,6 +200,7 @@ impl HteaPot {
                 break;
             }
             let mut parts = line.split(": ");
+            if parts.clone().count() != 2 {continue;}
             let key = parts.next().unwrap().to_string();
             let value = parts.next().unwrap();
             headers.insert(key, value.to_string());

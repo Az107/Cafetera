@@ -50,6 +50,25 @@ pub fn compare_path(path: String, path2: String) -> bool {
   return true;
 }
 
+pub fn clean_arg(arg_value: String) -> String {
+  let url_decoding_map: HashMap<&str, char> = vec![
+        ("%20", ' '), ("%21", '!'), ("%22", '"'), ("%23", '#'), 
+        ("%24", '$'), ("%25", '%'), ("%26", '&'), ("%27", '\''),
+        ("%28", '('), ("%29", ')'), ("%2A", '*'), ("%2B", '+'),
+        ("%2C", ','), ("%2D", '-'), ("%2E", '.'), ("%2F", '/'),
+        ("%3A", ':'), ("%3B", ';'), ("%3C", '<'), ("%3D", '='),
+        ("%3E", '>'), ("%3F", '?'), ("%40", '@'), ("%5B", '['),
+        ("%5C", '\\'), ("%5D", ']'), ("%5E", '^'), ("%5F", '_'),
+        ("%60", '`'), ("%7B", '{'), ("%7C", '|'), ("%7D", '}'),
+        ("%7E", '~')
+    ].into_iter().collect();
+  let mut decoded = arg_value.clone();
+  for item in url_decoding_map.keys() {
+    decoded = decoded.replace(item, url_decoding_map.get(item).unwrap().to_string().as_str());
+  }
+  return decoded;
+}
+
 pub fn get_path_args(path: String, path2: String) -> Option<HashMap<String,String>> {
   let parts = path.split("/");
   let parts2 = path2.split("/");

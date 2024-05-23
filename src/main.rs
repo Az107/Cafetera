@@ -4,6 +4,7 @@ mod utils;
 use std::env;
 
 use utils::SimpleRNG;
+use utils::clean_arg;
 use hteapot::HteaPot;
 use config_parser::{configMap, config, responseMap };
 use crate::{config_parser::response, hteapot::{HttpMethod, HttpStatus}};
@@ -12,6 +13,7 @@ use crate::{config_parser::response, hteapot::{HttpMethod, HttpStatus}};
 const DEFAULT_PORT: &str = "7878";
 
 
+// section MAIN
 
 fn main() {
         let args = std::env::args().collect::<Vec<String>>();
@@ -43,7 +45,7 @@ fn main() {
                             .replace("{{rand}}", SimpleRNG::new().next_range(0, 100).to_string().as_str());
                             for (key, value) in &req.args {
                                 let _body = body.clone();
-                                body = _body.replace(&format!("{{{{arg.{key}}}}}", key=key), value);
+                                body = _body.replace(&format!("{{{{arg.{key}}}}}", key=key),  clean_arg(value.to_string()).as_str());
                             }
                             let path_args = utils::get_path_args(req.path.clone(), config_item.path.clone());
                             if path_args.is_some() {
