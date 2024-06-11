@@ -1,80 +1,79 @@
 
-use std::{collections::HashMap, fs::File, io::BufReader};
+use std::{collections::HashMap, fs};
 use serde::{Deserialize, Serialize};
-use serde_json::{Result, Value};
-
-use hteapot::HttpMethod;
+use serde_json::Value;
+use hteapot::{HttpMethod, HttpStatus};
+use toml;
 use crate::utils::compare_path;
 
-#[derive(Serialize, Deserialize)]
-#[derive(Clone)]
-pub struct response {
-  pub status: u16,
-  pub body: Value,
-}
-
-pub struct ConfigItem {
+#[derive(Serialize, Deserialize,Clone, Debug)]
+pub struct Endpoint {
   pub path: String,
-  pub response: response,
-}
-//pub type responseMap = HashMap<String, response>;
-
-pub trait responseMap {
-  fn get_iter(&self, key: &str) -> Option<ConfigItem>;
+  pub status: u16,
+  pub body: String,
 }
 
-impl responseMap for HashMap<String, response> {
-  fn get_iter(&self, key: &str) -> Option<ConfigItem> {
-    for (path, response) in self {
-      if compare_path(path.to_string(), key.to_string()) {
-        let config_item = ConfigItem {
-          path: path.clone(),
-          response: response.clone(),
-        };
-        return Some(config_item);
+pub trait EndpointSearch {
+  fn get_iter(&self, key: &str) -> Option<Endpoint>;
+}
+
+impl EndpointSearch for Vec<Endpoint> {
+  fn get_iter(&self, key: &str) -> Option<Endpoint> {
+    for endpoint in self {
+      if compare_path(endpoint.path.to_string(), key.to_string()) {
+        return Some(endpoint.clone());
       } else {
         continue;
       }
     }
     return None;
-    //return self.get(key);
   }
 }
 
-pub type configMap = HashMap<HttpMethod, HashMap<String, response>>;
 
-pub trait config {
-  fn new() -> Self;
-  fn import(path: &str) -> Self;
+
+#[derive(Serialize, Debug, Deserialize)]
+pub struct Config {
+  pub endpoints: HashMap<String,Vec<Endpoint>>
 }
 
-impl config for configMap{
-    fn new() -> Self {
-      return HashMap::new();
-  }
+ 
+impl Config {
+    pub fn new() -> Self {
+      let mut endpoints = HashMap::new();
+      let e1 = Endpoint {
+        path: "/test".to_string(),
+        status: 200,
+        body: "Hello world".to_string()
+      };
+      let e2 = Endpoint {
+        path: "/".to_string(),
+        status: 201,
+        body: "abc".to_string()
+      };      
+      let e3 = Endpoint {
+        path: "/error".to_string(),
+        status: 404,
+        body: "error".to_string()
+      };
 
-  fn import(path: &str) -> Self {
-    let file = File::open(path).unwrap();
-    let reader = BufReader::new(file);
-    let raw: Value = serde_json::from_reader(reader).unwrap();
-    let mut data = HashMap::new();
-    for (key, value) in raw.as_object().unwrap() {
-      let mut responses = HashMap::new();
-      for element in value.as_array().unwrap() {
-        let element = element.as_object().unwrap();
-        let path = element.keys().next().unwrap();
-        println!("loaded path: {}", path);
-        let response = element.get(path).unwrap();
-        let response = response {
-          status: response["status"].as_u64().unwrap() as u16,
-          body: response["body"].clone(),
-        };
-        responses.insert(path.clone(), response);
+      endpoints.insert(HttpMethod::GET.to_str().to_string(), vec![e1,e2,e3]);
+      Config {
+        endpoints: endpoints
       }
-      let method = HttpMethod::from_str(key.to_uppercase().as_str());
-      data.insert(method, responses);
-    }
-    return data;
+  }
+
+
+  pub fn to_str(&self) -> String {
+    toml::to_string(self).unwrap().to_string()
+  }
+
+  pub fn import(path: &str) -> Self {
+    let config_toml = fs::read_to_string(path).unwrap();
+    // Parsear el TOML
+    let config: Config = toml::from_str(&config_toml).unwrap();
+    return config;
+
   }
 
 }

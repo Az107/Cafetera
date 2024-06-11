@@ -1,10 +1,9 @@
-[get]
-[[get.endpoints]]
+[[endpoints.GET]]
 path = "/health"
 status = 200
 body = "API is up and running"
 
-[[get.endpoints]]
+[[endpoints.GET]]
 path = "/users"
 status = 200
 body = '''
@@ -18,7 +17,7 @@ body = '''
 ]
 '''
 
-[[get.endpoints]]
+[[endpoints.GET]]
 path = "/users/{{name}}"
 status = 200
 body = '''
@@ -29,7 +28,7 @@ body = '''
 }
 '''
 
-[[get.endpoints]]
+[[endpoints.GET]]
 path = "/users/{{name}}/{{id}}"
 status = 200
 body = '''
@@ -40,8 +39,7 @@ body = '''
 }
 '''
 
-[post]
-[[post.endpoints]]
+[[endpoints.POST]]
 path = "/users"
 status = 201
 body = '''
