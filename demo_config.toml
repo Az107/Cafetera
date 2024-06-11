@@ -1,0 +1,53 @@
+[get]
+[[get.endpoints]]
+path = "/health"
+status = 200
+body = "API is up and running"
+
+[[get.endpoints]]
+path = "/users"
+status = 200
+body = '''
+[
+  {
+    "id": "{{rand}}",
+    "name": "{{arg.name}}",
+    "email": "",
+    "path": "{{path}}"
+  }
+]
+'''
+
+[[get.endpoints]]
+path = "/users/{{name}}"
+status = 200
+body = '''
+{
+  "id": 1,
+  "name": "{{name}}",
+  "email": ""
+}
+'''
+
+[[get.endpoints]]
+path = "/users/{{name}}/{{id}}"
+status = 200
+body = '''
+{
+  "id": "{{id}}",
+  "name": "{{name}}",
+  "email": ""
+}
+'''
+
+[post]
+[[post.endpoints]]
+path = "/users"
+status = 201
+body = '''
+{
+  "id": "{{rand}}",
+  "name": "Jane Doe",
+  "email": ""
+}
+'''
