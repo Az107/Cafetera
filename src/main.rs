@@ -4,9 +4,9 @@ use std::env;
 
 use utils::SimpleRNG;
 use utils::clean_arg;
-use hteapot::{Hteapot, HttpStatus};
+use hteapot::{HttpMethod, HttpStatus, Hteapot};
 use config_parser::{configMap, config, responseMap };
-use crate::config_parser::response;
+use crate::{config_parser::response};
 
 
 const DEFAULT_PORT: &str = "7878";
@@ -25,7 +25,7 @@ fn main() {
         let config = config_parser::configMap::import(&args[2]);
         let teapot = Hteapot::new(&addr, port);
         println!("Listening on http://{}:{}", addr, port);
-        teapot.listen(move |req| {
+        teapot.listen(move|req| {
             println!("{} {}", req.method.to_str(), req.path);
             println!("{:?}", req.headers);
             println!("{}", req.body);
@@ -53,7 +53,7 @@ fn main() {
                                     body = _body.replace(&format!("{{{{{key}}}}}", key=key), &value);
                                 }
                             }
-                            return Hteapot::response_maker(status, &body, None );
+                            return Hteapot::response_maker(status, &body,None );
                         }
                         None => {
                             return Hteapot::response_maker(HttpStatus::NotFound, "Not Found", None);
