@@ -34,54 +34,58 @@ CAFETERA <port> <config_path>
 
 The server's behavior is defined by a JSON configuration file. Below is an example of the configuration file structure:
 
-```json
+```toml
+[[endpoints.GET]]
+path = "/health"
+status = 200
+body = "API is up and running"
 
+[[endpoints.GET]]
+path = "/users"
+status = 200
+body = '''
+[
+  {
+    "id": "{{rand}}", <-- this will be replaced with a random number
+    "name": "{{arg.name}}",
+    "email": "",
+    "path": "{{path}}"
+  }
+]
+'''
+
+[[endpoints.GET]]
+path = "/users/{{name}}"
+status = 200
+body = '''
 {
-  "get": [
-    {
-      "/health": {
-        "status": 200,
-        "body": "API is up and running"
-      }
-    },
-    {
-      "/users": {
-        "status": 200,
-        "body": [
-          {
-            "id": 1,
-            "name": "John Doe",
-            "email": "test@example.org",
-            "path": "{{path}}" // This will be replaced with the path of the request
-          }
-        ]
-      }
-    },
-    {
-      "/users/{{name}}": {
-        "status": 200,
-        "body": {
-          "id": 1,
-          "name": "{{name}}",
-          "email": "test@example.org"
-        }
-      
-      }
-    }
-  ],
-  "post": [
-    {
-      "/users": {
-        "status": 201,
-        "body": {
-          "id": 2,
-          "name": "Jane Doe",
-          "email": ""
-        }
-      }
-    }
-  ]
+  "id": 1,
+  "name": "{{name}}",
+  "email": ""
 }
+'''
+
+[[endpoints.GET]]
+path = "/users/{{name}}/{{id}}"
+status = 200
+body = '''
+{
+  "id": "{{id}}",
+  "name": "{{name}}",
+  "email": ""
+}
+'''
+
+[[endpoints.POST]]
+path = "/users"
+status = 201
+body = '''
+{
+  "id": "{{rand}}",
+  "name": "Jane Doe",
+  "email": ""
+}
+'''
 ```
 ## Usage
 
