@@ -3,7 +3,7 @@ use std::{collections::HashMap, fs::File, io::BufReader};
 use serde::{Deserialize, Serialize};
 use serde_json::{Result, Value};
 
-use crate::hteapot::HttpMethod;
+use hteapot::HttpMethod;
 use crate::utils::compare_path;
 
 #[derive(Serialize, Deserialize)]

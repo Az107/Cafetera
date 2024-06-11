@@ -1,13 +1,12 @@
-mod hteapot;
 mod config_parser;
 mod utils;
 use std::env;
 
 use utils::SimpleRNG;
 use utils::clean_arg;
-use hteapot::HteaPot;
+use hteapot::{Hteapot, HttpStatus};
 use config_parser::{configMap, config, responseMap };
-use crate::{config_parser::response, hteapot::{HttpMethod, HttpStatus}};
+use crate::config_parser::response;
 
 
 const DEFAULT_PORT: &str = "7878";
@@ -24,9 +23,9 @@ fn main() {
         let addr: String = String::from("0.0.0.0");
         let port: u16 = args[1].clone().parse().unwrap_or(8080);
         let config = config_parser::configMap::import(&args[2]);
-        let teapot = HteaPot::new(&addr, port);
+        let teapot = Hteapot::new(&addr, port);
         println!("Listening on http://{}:{}", addr, port);
-        teapot.listen(|req| {
+        teapot.listen(move |req| {
             println!("{} {}", req.method.to_str(), req.path);
             println!("{:?}", req.headers);
             println!("{}", req.body);
@@ -54,15 +53,15 @@ fn main() {
                                     body = _body.replace(&format!("{{{{{key}}}}}", key=key), &value);
                                 }
                             }
-                            return HteaPot::response_maker(status, &body );
+                            return Hteapot::response_maker(status, &body, None );
                         }
                         None => {
-                            return HteaPot::response_maker(HttpStatus::NotFound, "Not Found");
+                            return Hteapot::response_maker(HttpStatus::NotFound, "Not Found", None);
                         }
                     }
                 }
                 None => {
-                    return HteaPot::response_maker(HttpStatus::NotFound, "Method Not Found");
+                    return Hteapot::response_maker(HttpStatus::NotFound, "Method Not Found", None);
                 }
             } 
 
