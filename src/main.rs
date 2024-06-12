@@ -1,15 +1,11 @@
 mod config_parser;
 mod utils;
-use std::env;
+
 
 use utils::SimpleRNG;
 use utils::clean_arg;
-use hteapot::{HttpMethod, HttpStatus, Hteapot};
+use hteapot::{HttpStatus, Hteapot};
 use config_parser::{Config, EndpointSearch};
-
-
-const DEFAULT_PORT: &str = "7878";
-
 
 // section MAIN
 

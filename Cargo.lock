@@ -3,17 +3,6 @@
 version = 3
 
 [[package]]
-name = "Cafetera"
-version = "0.1.0"
-dependencies = [
- "hteapot",
- "serde",
- "serde_json",
- "serde_with",
- "toml",
-]
-
-[[package]]
 name = "android-tzdata"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -45,6 +34,17 @@ name = "bumpalo"
 version = "3.15.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ff69b9dd49fd426c69a0db9fc04dd934cdb6645ff000864d98f7e2af8830eaa"
+
+[[package]]
+name = "cafetera"
+version = "0.1.0"
+dependencies = [
+ "hteapot",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "toml",
+]
 
 [[package]]
 name = "cc"

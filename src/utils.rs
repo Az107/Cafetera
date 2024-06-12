@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::Path};
+use std::collections::HashMap;
 
 pub struct SimpleRNG {
   state: u64,
@@ -10,10 +10,6 @@ impl SimpleRNG {
         .duration_since(std::time::SystemTime::UNIX_EPOCH)
         .unwrap()
         .as_secs();
-      SimpleRNG { state: seed }
-    }
-
-    pub fn new_with_seed(seed: u64) -> Self {
       SimpleRNG { state: seed }
     }
 
