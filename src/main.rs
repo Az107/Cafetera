@@ -22,7 +22,6 @@ fn main() {
         let addr: String = String::from("0.0.0.0");
         let port: u16 = args[1].clone().parse().unwrap_or(8080);
         let config = Config::import(&args[2]);
-        println!("{:?}",config);
         for method in config.endpoints.keys() {
             for endpoint in config.endpoints[method].iter() {
                 println!("Loaded {} {}",method, endpoint.path)
