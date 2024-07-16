@@ -2,6 +2,8 @@ mod config_parser;
 mod utils;
 
 
+use hteapot::headers;
+use hteapot::HttpMethod;
 use utils::SimpleRNG;
 use utils::clean_arg;
 use hteapot::{HttpStatus, Hteapot};
@@ -30,6 +32,11 @@ fn main() {
             println!("{:?}", req.headers);
             println!("{}", req.body);
             println!();
+            if req.method == HttpMethod::OPTIONS {
+                let star = &"*".to_string();
+                let origin = req.headers.get("Origin").unwrap_or(star);
+                return Hteapot::response_maker(HttpStatus::NoContent, "", headers!("Allow" => "GET, POST, OPTIONS, HEAD", "Access-Control-Allow-Origin" => origin, "Access-Control-Allow-Headers" => "Content-Type, Authorization" ));
+            }
             let response = config.endpoints.get(&req.method.to_str().to_string());
             match response {
                 Some(response) => {
@@ -52,7 +59,7 @@ fn main() {
                                     body = _body.replace(&format!("{{{{{key}}}}}", key=key), &value);
                                 }
                             }
-                            return Hteapot::response_maker(status, &body,None );
+                            return Hteapot::response_maker(status, &body,headers!("Allow" => "GET, POST, OPTIONS, HEAD", "Access-Control-Allow-Origin" => "*", "Access-Control-Allow-Headers" => "Content-Type, Authorization" ) );
                         }
                         None => {
                             return Hteapot::response_maker(HttpStatus::NotFound, "Not Found", None);
