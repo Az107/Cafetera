@@ -37,7 +37,7 @@ checksum = "7ff69b9dd49fd426c69a0db9fc04dd934cdb6645ff000864d98f7e2af8830eaa"
 
 [[package]]
 name = "cafetera"
-version = "0.2.0"
+version = "0.2.5"
 dependencies = [
  "hteapot",
  "serde",
