@@ -154,9 +154,9 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hteapot"
-version = "0.2.1"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62e80f4b30895d714a47adecb424f8be8460296a62cef86af1a54b32bba803bf"
+checksum = "31bd443606244879d3c447196f540fbeef0d505274ac36bd015b07b627b82c68"
 
 [[package]]
 name = "iana-time-zone"

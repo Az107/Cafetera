@@ -23,7 +23,7 @@ fn main() {
                 println!("Loaded {} {}",method, endpoint.path)
             }
         }
-        let mut teapot = Hteapot::new(&addr, port);
+        let teapot = Hteapot::new(&addr, port);
         println!("Listening on http://{}:{}", addr, port);
         teapot.listen(move|req| {
             println!("{} {}", req.method.to_str(), req.path);
