@@ -3,7 +3,7 @@
 
 ## Description
 
-This is a simple HTTP mock server, designed for mocking API endpoints for testing purposes. It allows you to define custom responses for different HTTP methods and routes through a TOML configuration file.
+**Cafetera** (/kafeˈteɾa/) is a simple HTTP mock server made with [HTEAPOT](https://github.com/az107/hteapot), designed for mocking API endpoints for testing purposes. It allows you to define custom responses for different HTTP methods and routes through a TOML configuration file.
 
 Requirements
 - Rust
