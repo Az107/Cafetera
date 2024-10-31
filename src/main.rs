@@ -1,33 +1,44 @@
 mod config_parser;
+mod db_handle;
 mod utils;
 
-
+use config_parser::{Config, EndpointSearch};
 use hteapot::headers;
 use hteapot::HttpMethod;
-use utils::SimpleRNG;
+use hteapot::{Hteapot, HttpStatus};
 use utils::clean_arg;
-use hteapot::{HttpStatus, Hteapot};
-use config_parser::{Config, EndpointSearch};
+use utils::SimpleRNG;
 
 // section MAIN
 
 fn main() {
-        let args = std::env::args().collect::<Vec<String>>();
-        if args.len() != 3 {
-            println!("Usage: {} <port> <config>", args[0]);
-            return;
+    let args = std::env::args().collect::<Vec<String>>();
+    if args.len() != 3 {
+        println!("Usage: {} <port> <config>", args[0]);
+        return;
+    }
+    let addr: String = String::from("0.0.0.0");
+    let port: u16 = args[1].clone().parse().unwrap_or(8080);
+    let config = Config::import(&args[2]);
+    let mut dbs: Vec<db_handle::DbHandle> = Vec::new();
+    for method in config.endpoints.keys() {
+        for endpoint in config.endpoints[method].iter() {
+            println!("Loaded {} {}", method, endpoint.path)
         }
-        let addr: String = String::from("0.0.0.0");
-        let port: u16 = args[1].clone().parse().unwrap_or(8080);
-        let config = Config::import(&args[2]);
-        for method in config.endpoints.keys() {
-            for endpoint in config.endpoints[method].iter() {
-                println!("Loaded {} {}",method, endpoint.path)
-            }
+    }
+    for db in config.db {
+        let dbh = db_handle::DbHandle::new(db.path, db.data);
+        if dbh.is_err() {
+            println!("Error loading db: {:?}", dbh.err());
+            continue;
         }
-        let teapot = Hteapot::new(&addr, port);
-        println!("Listening on http://{}:{}", addr, port);
-        teapot.listen(move|req| {
+        let dbh = dbh.unwrap();
+        println!("Loaded {} as db", dbh.root_path);
+        dbs.push(dbh);
+    }
+    let teapot = Hteapot::new(&addr, port);
+    println!("Listening on http://{}:{}", addr, port);
+    teapot.listen(move|req| {
             println!("{} {}", req.method.to_str(), req.path);
             println!("{:?}", req.headers);
             println!("{}", req.body);
@@ -37,6 +48,19 @@ fn main() {
                 let origin = req.headers.get("Origin").unwrap_or(star);
                 return Hteapot::response_maker(HttpStatus::NoContent, "", headers!("Allow" => "GET, POST, OPTIONS, HEAD", "Access-Control-Allow-Origin" => origin, "Access-Control-Allow-Headers" => "Content-Type, Authorization" ));
             }
+
+
+
+            let dbh = dbs.iter().find(|&dbh| dbh.is_match(&req.path));
+            if dbh.is_some() {
+                let dbh = dbh.unwrap();
+                let result = dbh.process(req.method.to_str(), req.path);
+                return match result {
+                    Some(r) => Hteapot::response_maker(HttpStatus::OK, r,None ),
+                    None => Hteapot::response_maker(HttpStatus::NotFound, "DB query not found" ,None )
+                    }
+            }
+
             let response = config.endpoints.get(&req.method.to_str().to_string());
             match response {
                 Some(response) => {
@@ -69,8 +93,7 @@ fn main() {
                 None => {
                     return Hteapot::response_maker(HttpStatus::NotFound, "Method Not Found", None);
                 }
-            } 
+            }
 
         });
-
 }

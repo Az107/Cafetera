@@ -49,3 +49,35 @@ body = '''
   "email": ""
 }
 '''
+
+
+[[db]]
+path = "/db/users/"
+data = '''
+{
+    "users":
+        [
+            {
+                "id": 0,
+                "name": "Alberto",
+                "surname": "Ruiz",
+                "age": 25,
+                "admin": true
+            },
+            {
+                "id": 1,
+                "name": "Eithne",
+                "surname": "Flor",
+                "age": 21,
+                "admin": false
+            },
+            {
+                "id": 2,
+                "name": "Juan",
+                "surname": "Perez",
+                "age": 52,
+                "admin": false
+            }
+      ]
+}
+'''
