@@ -37,7 +37,7 @@ checksum = "7ff69b9dd49fd426c69a0db9fc04dd934cdb6645ff000864d98f7e2af8830eaa"
 
 [[package]]
 name = "cafetera"
-version = "0.2.5"
+version = "0.3.0"
 dependencies = [
  "hteapot",
  "serde",
@@ -154,9 +154,9 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hteapot"
-version = "0.2.5"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31bd443606244879d3c447196f540fbeef0d505274ac36bd015b07b627b82c68"
+checksum = "6724f11c691545ea763fac753d85a6eda8c4967850a32e67e98db614a44c629e"
 
 [[package]]
 name = "iana-time-zone"

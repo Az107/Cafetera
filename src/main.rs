@@ -4,8 +4,7 @@ mod utils;
 
 use config_parser::{Config, EndpointSearch};
 use hteapot::headers;
-use hteapot::HttpMethod;
-use hteapot::{Hteapot, HttpStatus};
+use hteapot::{Hteapot, HttpMethod, HttpResponse, HttpStatus};
 use utils::clean_arg;
 use utils::SimpleRNG;
 
@@ -40,13 +39,16 @@ fn main() {
     println!("Listening on http://{}:{}", addr, port);
     teapot.listen(move|req| {
             println!("{} {}", req.method.to_str(), req.path);
-            println!("{:?}", req.headers);
+            for (k,v) in &req.headers {
+                println!("- {}: {}",k,v)
+            }
+            println!();
             println!("{}", req.body);
             println!();
             if req.method == HttpMethod::OPTIONS {
                 let star = &"*".to_string();
                 let origin = req.headers.get("Origin").unwrap_or(star);
-                return Hteapot::response_maker(HttpStatus::NoContent, "", headers!("Allow" => "GET, POST, OPTIONS, HEAD", "Access-Control-Allow-Origin" => origin, "Access-Control-Allow-Headers" => "Content-Type, Authorization" ));
+                return HttpResponse::new(HttpStatus::NoContent, "", headers!("Allow" => "GET, POST, OPTIONS, HEAD", "Access-Control-Allow-Origin" => origin, "Access-Control-Allow-Headers" => "Content-Type, Authorization" ));
             }
 
 
@@ -56,8 +58,8 @@ fn main() {
                 let dbh = dbh.unwrap();
                 let result = dbh.process(req.method.to_str(), req.path, req.args);
                 return match result {
-                    Some(r) => Hteapot::response_maker(HttpStatus::OK, r,None ),
-                    None => Hteapot::response_maker(HttpStatus::NotFound, "DB query not found" ,None )
+                    Some(r) => HttpResponse::new(HttpStatus::OK, r,None ),
+                    None => HttpResponse::new(HttpStatus::NotFound, "DB query not found" ,None )
                     }
             }
 
@@ -83,15 +85,15 @@ fn main() {
                                     body = _body.replace(&format!("{{{{{key}}}}}", key=key), &value);
                                 }
                             }
-                            return Hteapot::response_maker(status, &body,headers!("Allow" => "GET, POST, OPTIONS, HEAD", "Access-Control-Allow-Origin" => "*", "Access-Control-Allow-Headers" => "Content-Type, Authorization" ) );
+                            return HttpResponse::new(status, &body,headers!("Allow" => "GET, POST, OPTIONS, HEAD", "Access-Control-Allow-Origin" => "*", "Access-Control-Allow-Headers" => "Content-Type, Authorization" ) );
                         }
                         None => {
-                            return Hteapot::response_maker(HttpStatus::NotFound, "Not Found", None);
+                            return HttpResponse::new(HttpStatus::NotFound, "Not Found", None);
                         }
                     }
                 }
                 None => {
-                    return Hteapot::response_maker(HttpStatus::NotFound, "Method Not Found", None);
+                    return HttpResponse::new(HttpStatus::NotFound, "Method Not Found", None);
                 }
             }
 
