@@ -52,10 +52,9 @@ body = '''
 
 
 [[db]]
-path = "/db/users/"
+path = "/db/users"
 data = '''
-{
-    "users":
+
         [
             {
                 "id": 0,
@@ -79,5 +78,4 @@ data = '''
                 "admin": false
             }
       ]
-}
 '''

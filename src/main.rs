@@ -54,7 +54,7 @@ fn main() {
             let dbh = dbs.iter().find(|&dbh| dbh.is_match(&req.path));
             if dbh.is_some() {
                 let dbh = dbh.unwrap();
-                let result = dbh.process(req.method.to_str(), req.path);
+                let result = dbh.process(req.method.to_str(), req.path, req.args);
                 return match result {
                     Some(r) => Hteapot::response_maker(HttpStatus::OK, r,None ),
                     None => Hteapot::response_maker(HttpStatus::NotFound, "DB query not found" ,None )

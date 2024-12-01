@@ -1,4 +1,6 @@
-use serde_json::{json, Value};
+use std::collections::HashMap;
+
+use serde_json::Value;
 
 // EXAMPLE JSON DB
 // [
@@ -40,7 +42,7 @@ impl DbHandle {
         Ok(DbHandle { root_path, db_data })
     }
 
-    fn get(&self, path: String) -> Option<String> {
+    fn get(&self, path: String, args: HashMap<String, String>) -> Option<String> {
         let path_elements = path.split("/");
         let mut pointer = self.db_data.clone();
 
@@ -56,12 +58,30 @@ impl DbHandle {
                 if rp.is_some() {
                     pointer = rp.unwrap().clone();
                 } else {
-                    let index = element.parse::<usize>().unwrap();
+                    let index = element.parse::<usize>();
+                    if index.is_err() {
+                        return None;
+                    }
+                    let index = index.unwrap();
+                    if pointer_array.len() <= index {
+                        return None;
+                    }
                     pointer = pointer_array[index].clone();
                 }
             } else {
                 pointer = pointer[element].clone();
             }
+        }
+        if pointer.is_array() {
+            let mut array: Vec<Value> = pointer.as_array().unwrap().clone();
+            for (k, v) in args {
+                let k: &str = k.as_str().as_ref();
+                array = array
+                    .into_iter()
+                    .filter(|i| i[k].to_string() == v)
+                    .collect::<Vec<Value>>();
+            }
+            pointer = Value::Array(array);
         }
         let result = serde_json::to_string(&pointer);
         match result {
@@ -80,18 +100,27 @@ impl DbHandle {
         path.starts_with(self.root_path.as_str())
     }
 
-    pub fn process(&self, method: &str, path: String) -> Option<String> {
+    pub fn process(
+        &self,
+        method: &str,
+        path: String,
+        args: HashMap<String, String>,
+    ) -> Option<String> {
         let mut path = path;
-        if path.starts_with(self.root_path.as_str()) {
-            path = path
-                .strip_prefix(self.root_path.as_str())
-                .unwrap()
-                .to_string();
+        let root_path = if self.root_path.ends_with('/') {
+            let mut chars = self.root_path.chars();
+            chars.next_back();
+            chars.as_str()
+        } else {
+            self.root_path.as_str()
+        };
+        if path.starts_with(root_path) {
+            path = path.strip_prefix(root_path).unwrap().to_string();
         } else {
             return None;
         }
         match method {
-            "GET" => self.get(path),
+            "GET" => self.get(path, args),
             _ => None,
         }
     }
@@ -132,7 +161,7 @@ mod tests {
         let json_data = json!({"key1": "value1", "key2": {"subkey": "value2"}}).to_string();
         let db_handle = DbHandle::new(root_path.clone(), json_data).unwrap();
 
-        let result = db_handle.get(String::from("key2/subkey"));
+        let result = db_handle.get(String::from("key2/subkey"), HashMap::new());
         assert_eq!(result, Some(String::from("\"value2\""))); // Serde JSON añade comillas a las cadenas
     }
 
@@ -142,7 +171,7 @@ mod tests {
         let json_data = json!({"key1": "value1", "key2": {"subkey": "value2"}}).to_string();
         let db_handle = DbHandle::new(root_path.clone(), json_data).unwrap();
 
-        let result = db_handle.get(String::from("key2/nonexistent"));
+        let result = db_handle.get(String::from("key2/nonexistent"), HashMap::new());
         assert_eq!(result, None); // No existe la clave
     }
 
@@ -152,7 +181,7 @@ mod tests {
         let json_data = json!({"key1": "value1", "key2": {"subkey": "value2"}}).to_string();
         let db_handle = DbHandle::new(root_path.clone(), json_data).unwrap();
 
-        let result = db_handle.get(String::from(""));
+        let result = db_handle.get(String::from(""), HashMap::new());
         assert_eq!(result, None); // Ruta vacía no debe devolver nada
     }
 
@@ -163,7 +192,7 @@ mod tests {
             json!({"key1": "value1", "key2": {"subkey": {"deepkey": "deepvalue"}}}).to_string();
         let db_handle = DbHandle::new(root_path.clone(), json_data).unwrap();
 
-        let result = db_handle.get(String::from("key2/subkey/deepkey"));
+        let result = db_handle.get(String::from("key2/subkey/deepkey"), HashMap::new());
         assert_eq!(result, Some(String::from("\"deepvalue\""))); // Verifica el valor profundo
     }
 }
