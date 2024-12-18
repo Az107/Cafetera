@@ -2,6 +2,8 @@ mod config_parser;
 mod db_handle;
 mod utils;
 
+use std::sync::{Arc, Mutex};
+
 use config_parser::{Config, EndpointSearch};
 use hteapot::headers;
 use hteapot::{Hteapot, HttpMethod, HttpResponse, HttpStatus};
@@ -37,6 +39,8 @@ fn main() {
     }
     let teapot = Hteapot::new(&addr, port);
     println!("Listening on http://{}:{}", addr, port);
+    let dbs_arc = Arc::new(Mutex::new(dbs));
+    let dbs_clone = dbs_arc.clone();
     teapot.listen(move|req| {
             println!("{} {}", req.method.to_str(), req.path);
             for (k,v) in &req.headers {
@@ -52,15 +56,21 @@ fn main() {
             }
 
 
-
-            let dbh = dbs.iter().find(|&dbh| dbh.is_match(&req.path));
-            if dbh.is_some() {
-                let dbh = dbh.unwrap();
-                let result = dbh.process(req.method.to_str(), req.path, req.args);
-                return match result {
-                    Some(r) => HttpResponse::new(HttpStatus::OK, r,None ),
-                    None => HttpResponse::new(HttpStatus::NotFound, "DB query not found" ,None )
-                    }
+            {
+                let dbs = dbs_clone.lock();
+                if dbs.is_err() {
+                    return HttpResponse::new(HttpStatus::InternalServerError,"Error getting dbs", None);
+                }
+                let mut dbs = dbs.unwrap();
+                let mut dbh = dbs.iter_mut().find(|dbh| dbh.is_match(&req.path));
+                if dbh.is_some() {
+                    let dbh = dbh.unwrap();
+                    let result = dbh.process(req.method.to_str(), req.path, req.args, req.body);
+                    return match result {
+                        Some(r) => HttpResponse::new(HttpStatus::OK, r,None ),
+                        None => HttpResponse::new(HttpStatus::NotFound, "DB query not found" ,None )
+                        }
+                }
             }
 
             let response = config.endpoints.get(&req.method.to_str().to_string());
