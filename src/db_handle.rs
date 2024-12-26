@@ -42,66 +42,7 @@ impl DbHandle {
         Ok(DbHandle { root_path, db_data })
     }
 
-    fn get(&self, path: String, args: HashMap<String, String>) -> Option<String> {
-        let path_elements = path.split("/");
-        let mut pointer = self.db_data.clone();
-
-        for element in path_elements.into_iter() {
-            if element == "" {
-                continue;
-            }
-            if pointer.is_array() {
-                let pointer_array = pointer.as_array().unwrap();
-                let rp = pointer_array
-                    .iter()
-                    .find(|v| v["id"].to_string() == element);
-                if rp.is_some() {
-                    pointer = rp.unwrap().clone();
-                } else {
-                    let index = element.parse::<usize>();
-                    if index.is_err() {
-                        return None;
-                    }
-                    let index = index.unwrap();
-                    if pointer_array.len() <= index {
-                        return None;
-                    }
-                    pointer = pointer_array[index].clone();
-                }
-            } else {
-                pointer = pointer[element].clone();
-            }
-        }
-        if pointer.is_array() {
-            let mut array: Vec<Value> = pointer.as_array().unwrap().clone();
-            for (k, v) in args {
-                let k: &str = k.as_str().as_ref();
-                array = array
-                    .into_iter()
-                    .filter(|i| i[k].to_string() == v)
-                    .collect::<Vec<Value>>();
-            }
-            pointer = Value::Array(array);
-        }
-        let result = serde_json::to_string(&pointer);
-        match result {
-            Ok(r) => {
-                if r == "null" {
-                    None
-                } else {
-                    Some(r)
-                }
-            }
-            Err(_) => None,
-        }
-    }
-
-    fn post(
-        &mut self,
-        path: String,
-        args: HashMap<String, String>,
-        body: String,
-    ) -> Option<String> {
+    fn _find(&mut self, path: String) -> Option<&mut Value> {
         let path_elements = path.split("/");
         let mut pointer = &mut self.db_data;
 
@@ -123,20 +64,130 @@ impl DbHandle {
                 if index.is_none() {
                     return None;
                 }
-                pointer = &mut array_pointer[index.unwrap()];
+                let index = index.unwrap();
+                if index >= array_pointer_clone.len() {
+                    return None;
+                }
+                pointer = &mut array_pointer[index];
             } else {
                 pointer = &mut pointer[element];
             }
         }
+        return Some(pointer);
+    }
+
+    fn filter(data: Value, args: HashMap<String, String>) -> Option<Value> {
+        let mut result = data.clone();
+        if args.len() == 0 {
+            return Some(data);
+        }
+        if data.is_array() {
+            let mut array: Vec<Value> = data.as_array().unwrap().clone();
+            for (k, v) in args {
+                let k: &str = k.as_str().as_ref();
+                array = array
+                    .into_iter()
+                    .filter(|i| i[k].to_string() == v)
+                    .collect::<Vec<Value>>();
+            }
+            result = Value::Array(array);
+        } else {
+            return Some(data);
+        }
+        return Some(result);
+    }
+
+    fn get(&mut self, path: String, args: HashMap<String, String>) -> Option<Value> {
+        let result = self._find(path);
+        if result.is_none() {
+            return None;
+        }
+        let result = result.unwrap().clone();
+        let result = Self::filter(result, args);
+        return result;
+    }
+
+    fn post(&mut self, path: String, args: HashMap<String, String>, body: String) -> Option<Value> {
+        let pointer = self._find(path);
+        if pointer.is_none() {
+            return None;
+        }
+        let pointer = pointer.unwrap();
+
         if pointer.is_array() {
-            let newObject = serde_json::from_str(body.as_str());
-            if newObject.is_err() {
+            let new_object = serde_json::from_str(body.as_str());
+            if new_object.is_err() {
                 return None;
             }
-            let newObject = newObject.unwrap();
-            pointer.as_array_mut().unwrap().push(newObject);
+            let new_object = new_object.unwrap();
+            pointer.as_array_mut().unwrap().push(new_object);
         }
-        let result = serde_json::to_string(&pointer);
+        return Some(pointer.clone());
+    }
+
+    fn delete(
+        &mut self,
+        path: String,
+        args: HashMap<String, String>,
+        body: String,
+    ) -> Option<Value> {
+        let result = if args.len() != 0 {
+            let pointer = self._find(path);
+            if pointer.is_none() {
+                return None;
+            }
+            let pointer = pointer.unwrap();
+            if pointer.is_array() {
+                let array_pointer = pointer.as_array_mut().unwrap();
+                array_pointer.retain(|x| {
+                    let mut remove = false;
+                    for (k, v) in args.iter() {
+                        let k: &str = k.as_str().as_ref();
+                        if x[k].to_string() == *v {
+                            remove = true;
+                        } else {
+                            remove = false;
+                        }
+                    }
+
+                    return !remove;
+                });
+            }
+
+            Some(pointer.clone())
+        } else {
+            let target = path.split('/').last().unwrap_or("");
+            let parent = path.strip_suffix(target).unwrap_or("/").to_string();
+            let pointer = self._find(parent);
+            if pointer.is_none() {
+                return None;
+            }
+            let pointer = pointer.unwrap();
+            if pointer.is_object() {
+                let obj = pointer.as_object_mut().unwrap();
+                obj.remove(target);
+            } else if pointer.is_array() && target.parse::<usize>().is_ok() {
+                let arr = pointer.as_array_mut().unwrap();
+                let index = target.parse::<usize>().unwrap();
+                arr.remove(index);
+            }
+            Some(pointer.clone())
+        };
+
+        return result;
+    }
+
+    pub fn is_match(&self, path: &String) -> bool {
+        path.starts_with(self.root_path.as_str())
+    }
+
+    fn friendlify(data: Option<Value>) -> Option<String> {
+        if data.is_none() {
+            return None;
+        }
+        let data = data.unwrap();
+
+        let result = serde_json::to_string(&data.clone());
         match result {
             Ok(r) => {
                 if r == "null" {
@@ -147,10 +198,6 @@ impl DbHandle {
             }
             Err(_) => None,
         }
-    }
-
-    pub fn is_match(&self, path: &String) -> bool {
-        path.starts_with(self.root_path.as_str())
     }
 
     pub fn process(
@@ -173,11 +220,13 @@ impl DbHandle {
         } else {
             return None;
         }
-        match method {
+        let response = match method {
             "GET" => self.get(path, args),
             "POST" => self.post(path, args, body),
+            "DELETE" => self.delete(path, args, body),
             _ => None,
-        }
+        };
+        return Self::friendlify(response);
     }
 }
 
@@ -214,9 +263,10 @@ mod tests {
     fn test_get_valid_path() {
         let root_path = String::from("/path/to/db");
         let json_data = json!({"key1": "value1", "key2": {"subkey": "value2"}}).to_string();
-        let db_handle = DbHandle::new(root_path.clone(), json_data).unwrap();
+        let mut db_handle = DbHandle::new(root_path.clone(), json_data).unwrap();
 
         let result = db_handle.get(String::from("key2/subkey"), HashMap::new());
+        let result = DbHandle::friendlify(result);
         assert_eq!(result, Some(String::from("\"value2\""))); // Serde JSON añade comillas a las cadenas
     }
 
@@ -224,7 +274,7 @@ mod tests {
     fn test_get_invalid_path() {
         let root_path = String::from("/path/to/db");
         let json_data = json!({"key1": "value1", "key2": {"subkey": "value2"}}).to_string();
-        let db_handle = DbHandle::new(root_path.clone(), json_data).unwrap();
+        let mut db_handle = DbHandle::new(root_path.clone(), json_data).unwrap();
 
         let result = db_handle.get(String::from("key2/nonexistent"), HashMap::new());
         assert_eq!(result, None); // No existe la clave
@@ -245,9 +295,10 @@ mod tests {
         let root_path = String::from("/path/to/db");
         let json_data =
             json!({"key1": "value1", "key2": {"subkey": {"deepkey": "deepvalue"}}}).to_string();
-        let db_handle = DbHandle::new(root_path.clone(), json_data).unwrap();
+        let mut db_handle = DbHandle::new(root_path.clone(), json_data).unwrap();
 
         let result = db_handle.get(String::from("key2/subkey/deepkey"), HashMap::new());
+        let result = DbHandle::friendlify(result);
         assert_eq!(result, Some(String::from("\"deepvalue\""))); // Verifica el valor profundo
     }
 }
