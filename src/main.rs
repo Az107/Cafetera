@@ -2,7 +2,10 @@ mod config_parser;
 mod db_handle;
 mod utils;
 
+use std::sync::{Arc, Mutex};
+
 use config_parser::{Config, EndpointSearch};
+use db_handle::DbHandle;
 use hteapot::headers;
 use hteapot::{Hteapot, HttpMethod, HttpResponse, HttpStatus};
 use utils::clean_arg;
@@ -35,6 +38,8 @@ fn main() {
         println!("Loaded {} as db", dbh.root_path);
         dbs.push(dbh);
     }
+    let dbs: Arc<Mutex<Vec<DbHandle>>> = Arc::new(Mutex::new(dbs));
+    let dbsc = dbs.clone();
     let teapot = Hteapot::new(&addr, port);
     println!("Listening on http://{}:{}", addr, port);
     teapot.listen(move|req| {
@@ -53,14 +58,17 @@ fn main() {
 
 
 
-            let dbh = dbs.iter().find(|&dbh| dbh.is_match(&req.path));
-            if dbh.is_some() {
-                let dbh = dbh.unwrap();
-                let result = dbh.process(req.method.to_str(), req.path, req.args);
-                return match result {
-                    Some(r) => HttpResponse::new(HttpStatus::OK, r,None ),
-                    None => HttpResponse::new(HttpStatus::NotFound, "DB query not found" ,None )
-                    }
+            {
+                let mut dbs = dbsc.lock().unwrap();
+                let dbh = dbs.iter_mut().find(|dbh| dbh.is_match(&req.path));
+                if dbh.is_some() {
+                    let dbh = dbh.unwrap();
+                    let result = dbh.process(req.method.to_str(), req.path, req.args,req.body);
+                    return match result {
+                        Some(r) => HttpResponse::new(HttpStatus::OK, r,None ),
+                        None => HttpResponse::new(HttpStatus::NotFound, "DB query not found" ,None )
+                        }
+                }
             }
 
             let response = config.endpoints.get(&req.method.to_str().to_string());
@@ -69,7 +77,7 @@ fn main() {
                     let config_item = response.get_iter(&req.path);
                     match config_item {
                         Some(endpoint) => {
-                            let status = HttpStatus::from_u16(endpoint.status);
+                            let status = HttpStatus::from_u16(endpoint.status).unwrap_or(HttpStatus::OK);
                             let mut body = endpoint.body.to_string()
                             .replace("{{path}}", &req.path)
                             .replace("{{body}}", &req.body)

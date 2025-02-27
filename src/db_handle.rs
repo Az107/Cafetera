@@ -42,36 +42,39 @@ impl DbHandle {
         Ok(DbHandle { root_path, db_data })
     }
 
-    fn get(&self, path: String, args: HashMap<String, String>) -> Option<String> {
-        let path_elements = path.split("/");
-        let mut pointer = self.db_data.clone();
-
-        for element in path_elements.into_iter() {
-            if element == "" {
-                continue;
-            }
-            if pointer.is_array() {
-                let pointer_array = pointer.as_array().unwrap();
-                let rp = pointer_array
-                    .iter()
-                    .find(|v| v["id"].to_string() == element);
-                if rp.is_some() {
-                    pointer = rp.unwrap().clone();
-                } else {
-                    let index = element.parse::<usize>();
-                    if index.is_err() {
-                        return None;
-                    }
-                    let index = index.unwrap();
-                    if pointer_array.len() <= index {
-                        return None;
-                    }
-                    pointer = pointer_array[index].clone();
-                }
-            } else {
-                pointer = pointer[element].clone();
+    fn post(
+        &mut self,
+        path: String,
+        _args: HashMap<String, String>,
+        body: Option<Value>,
+    ) -> Option<String> {
+        let pointer = self.db_data.pointer_mut(&path)?;
+        if pointer.is_array() {
+            let list = pointer.as_array_mut()?;
+            let r = list.push(body?);
+            let _ = serde_json::to_string(&r.clone());
+        } else {
+            let body_c = body.clone()?;
+            let body_obj = body_c.as_object()?;
+            for (k, v) in body_obj.clone() {
+                pointer[k] = v.clone();
             }
         }
+        let result = serde_json::to_string(&pointer);
+        match result {
+            Ok(r) => {
+                if r == "null" {
+                    None
+                } else {
+                    Some(r)
+                }
+            }
+            Err(_) => None,
+        }
+    }
+
+    fn get(&self, path: String, args: HashMap<String, String>) -> Option<String> {
+        let mut pointer = self.db_data.pointer(&path)?.clone();
         if pointer.is_array() {
             let mut array: Vec<Value> = pointer.as_array().unwrap().clone();
             for (k, v) in args {
@@ -101,10 +104,11 @@ impl DbHandle {
     }
 
     pub fn process(
-        &self,
+        &mut self,
         method: &str,
         path: String,
         args: HashMap<String, String>,
+        body: String,
     ) -> Option<String> {
         let mut path = path;
         let root_path = if self.root_path.ends_with('/') {
@@ -119,8 +123,22 @@ impl DbHandle {
         } else {
             return None;
         }
+        let path = if path.ends_with('/') {
+            let mut path = path.clone();
+            path.pop();
+            path
+        } else {
+            path
+        };
+        let body = serde_json::from_str::<Value>(&body);
+        let body = if body.is_err() {
+            None
+        } else {
+            Some(body.unwrap())
+        };
         match method {
             "GET" => self.get(path, args),
+            "POST" => self.post(path, args, body),
             _ => None,
         }
     }
