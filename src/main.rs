@@ -80,8 +80,8 @@ fn main() {
                     let dbh = dbh.unwrap();
                     let result = dbh.process(req.method.to_str(), req.path, req.args,req.body);
                     return match result {
-                        Some(r) => HttpResponse::new(HttpStatus::OK, r,None ),
-                        None => HttpResponse::new(HttpStatus::NotFound, "DB query not found" ,None )
+                        Ok(r) => HttpResponse::new(HttpStatus::OK, r,None ),
+                        Err(err) => HttpResponse::new(err.status, err.text ,None )
                         }
                 }
             }
