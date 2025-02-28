@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-
 use serde_json::Value;
-
+use std::collections::HashMap;
+// DB Module to manage quick mock of dbs
+// this allow basic CRUD whit a mock DB in config
 // EXAMPLE JSON DB
 // [
 //  {
@@ -40,6 +40,61 @@ impl DbHandle {
         let db_data: Value = db_data.unwrap();
 
         Ok(DbHandle { root_path, db_data })
+    }
+    fn split_path(path: &str) -> Option<(&str, &str)> {
+        let mut parts = path.rsplitn(2, '/');
+        let attribute = parts.next()?;
+        let parent = parts.next().unwrap_or("");
+        Some((parent, attribute))
+    }
+
+    fn delete(&mut self, path: String, _args: HashMap<String, String>) -> Option<String> {
+        let (parent, attr) = Self::split_path(&path)?;
+        let pointer = self.db_data.pointer_mut(&parent)?;
+        if pointer.is_array() {
+            let index = attr.parse::<usize>();
+            if index.is_err() {
+                return None;
+            }
+            let index = index.unwrap();
+            pointer.as_array_mut()?.remove(index);
+        } else if pointer.is_object() {
+            pointer.as_object_mut()?.remove(attr);
+        }
+        let result = pointer.to_string();
+        return Some(result);
+    }
+
+    fn patch(
+        &mut self,
+        path: String,
+        _args: HashMap<String, String>,
+        body: Option<Value>,
+    ) -> Option<String> {
+        let pointer = self.db_data.pointer_mut(&path)?;
+        if pointer.is_array() {
+            return None;
+        } else {
+            let body_c = body.clone()?;
+            let body_obj = body_c.as_object()?;
+            for (k, v) in body_obj.clone() {
+                if pointer.get(k.clone()).is_none() {
+                    continue;
+                };
+                pointer[k] = v.clone();
+            }
+        }
+        let result = serde_json::to_string(&pointer);
+        match result {
+            Ok(r) => {
+                if r == "null" {
+                    None
+                } else {
+                    Some(r)
+                }
+            }
+            Err(_) => None,
+        }
     }
 
     fn post(
@@ -139,6 +194,8 @@ impl DbHandle {
         match method {
             "GET" => self.get(path, args),
             "POST" => self.post(path, args, body),
+            "PATCH" => self.patch(path, args, body),
+            "DELETE" => self.delete(path, args),
             _ => None,
         }
     }

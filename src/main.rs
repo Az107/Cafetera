@@ -15,13 +15,18 @@ use utils::SimpleRNG;
 
 fn main() {
     let args = std::env::args().collect::<Vec<String>>();
-    if args.len() != 3 {
+    if args.len() < 3 {
         println!("Usage: {} <port> <config>", args[0]);
         return;
     }
     let addr: String = String::from("0.0.0.0");
     let port: u16 = args[1].clone().parse().unwrap_or(8080);
     let config = Config::import(&args[2]);
+    let silent = args
+        .get(3)
+        .is_some()
+        .then(|| args.get(3).unwrap().eq("-s"))
+        .is_some();
     let mut dbs: Vec<db_handle::DbHandle> = Vec::new();
     for method in config.endpoints.keys() {
         for endpoint in config.endpoints[method].iter() {
@@ -43,13 +48,23 @@ fn main() {
     let teapot = Hteapot::new(&addr, port);
     println!("Listening on http://{}:{}", addr, port);
     teapot.listen(move|req| {
-            println!("{} {}", req.method.to_str(), req.path);
-            for (k,v) in &req.headers {
-                println!("- {}: {}",k,v)
+            if !silent {
+                let headers: String = req.headers.iter()
+                    .map(|(k, v)| format!("- {}: {}", k, v))
+                    .collect::<Vec<String>>()
+                    .join("\n");
+
+                let output = format!(
+                    "{} {}\n{}\n\n{}",
+                    req.method.to_str(),
+                    req.path,
+                    headers,
+                    req.body
+                );
+
+                println!("{}", output);
+
             }
-            println!();
-            println!("{}", req.body);
-            println!();
             if req.method == HttpMethod::OPTIONS {
                 let star = &"*".to_string();
                 let origin = req.headers.get("Origin").unwrap_or(star);
