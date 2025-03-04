@@ -55,6 +55,10 @@ impl DbHandle {
     }
 
     fn delete(&mut self, path: String, _args: HashMap<String, String>) -> Result<String, HttpErr> {
+        let _ = self.db_data.pointer(&path).ok_or(HttpErr {
+            status: HttpStatus::NotFound,
+            text: "Invalud path",
+        });
         let (parent, attr) = Self::split_path(&path).ok_or(HttpErr {
             status: HttpStatus::BadRequest,
             text: "Can't remove all the db",
@@ -304,26 +308,26 @@ mod tests {
     #[test]
     fn test_delete_valid_key() {
         let json_data = json!({"parent": {"child": "value"}}).to_string();
-        let mut db = DbHandle::new("/test".to_string(), json_data).unwrap();
-        let result = db.delete("parent/child".to_string(), HashMap::new());
-        assert!(result.is_ok());
+        let mut db: DbHandle = DbHandle::new("/test".to_string(), json_data).unwrap();
+        let result = db.delete("/parent/child".to_string(), HashMap::new());
+        assert!(result.is_ok())
         //assert_eq!(result.unwrap(), "{}");
     }
 
     #[test]
     fn test_delete_invalid_key() {
         let json_data = json!({"parent": {"child": "value"}}).to_string();
-        let mut db = DbHandle::new("/test".to_string(), json_data).unwrap();
-        let result = db.delete("parent/non_existent".to_string(), HashMap::new());
+        let mut db: DbHandle = DbHandle::new("/test".to_string(), json_data).unwrap();
+        let result = db.delete("/paren/non_existent".to_string(), HashMap::new());
         assert!(result.is_err());
     }
 
     #[test]
     fn test_patch_valid_key() {
         let json_data = json!({"key": {"subkey": "old_value"}}).to_string();
-        let mut db = DbHandle::new("/test".to_string(), json_data).unwrap();
+        let mut db: DbHandle = DbHandle::new("/test".to_string(), json_data).unwrap();
         let patch_body = json!({"subkey": "new_value"});
-        let result = db.patch("key".to_string(), HashMap::new(), Some(patch_body));
+        let result = db.patch("/key".to_string(), HashMap::new(), Some(patch_body));
         assert!(result.is_ok());
         //assert_eq!(result.unwrap(), "{\"subkey\":\"new_value\"}");
     }
@@ -333,7 +337,7 @@ mod tests {
         let json_data = json!({"list": []}).to_string();
         let mut db = DbHandle::new("/test".to_string(), json_data).unwrap();
         let post_body = json!("new_item");
-        let result = db.post("list".to_string(), HashMap::new(), Some(post_body));
+        let result = db.post("/list".to_string(), HashMap::new(), Some(post_body));
         assert!(result.is_ok());
     }
 
@@ -341,7 +345,7 @@ mod tests {
     fn test_get_valid_key() {
         let json_data = json!({"key": "value"}).to_string();
         let db = DbHandle::new("/test".to_string(), json_data).unwrap();
-        let result = db.get("key".to_string(), HashMap::new());
+        let result = db.get("/key".to_string(), HashMap::new());
         assert!(result.is_ok());
         //assert_eq!(result.unwrap(), "\"value\"");
     }
@@ -350,7 +354,7 @@ mod tests {
     fn test_get_invalid_key() {
         let json_data = json!({"key": "value"}).to_string();
         let db = DbHandle::new("/test".to_string(), json_data).unwrap();
-        let result = db.get("non_existent".to_string(), HashMap::new());
+        let result = db.get("/non_existent".to_string(), HashMap::new());
         assert!(result.is_err());
     }
 }
