@@ -1,4 +1,4 @@
-# CAFETERA
+# CAFETERA ☕️
 [![Test](https://github.com/Az107/Cafetera/actions/workflows/test.yml/badge.svg)](https://github.com/Az107/Cafetera/actions/workflows/test.yml)
 
 ## Description
@@ -32,7 +32,7 @@ CAFETERA <port> <config_path>
 
 ## Configuration
 
-The server's behavior is defined by a JSON configuration file. Below is an example of the configuration file structure:
+The server's behavior is defined by a TOML configuration file. Below is an example of the configuration file structure:
 
 ```toml
 [[endpoints.GET]]
