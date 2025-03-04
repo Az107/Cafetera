@@ -33,15 +33,18 @@ fn main() {
             println!("Loaded {} {}", method, endpoint.path)
         }
     }
-    for db in config.db {
-        let dbh = db_handle::DbHandle::new(db.path, db.data);
-        if dbh.is_err() {
-            println!("Error loading db: {:?}", dbh.err());
-            continue;
+    if config.db.is_some() {
+        let config_db = config.db.unwrap().clone();
+        for db in config_db {
+            let dbh = db_handle::DbHandle::new(db.path, db.data);
+            if dbh.is_err() {
+                println!("Error loading db: {:?}", dbh.err());
+                continue;
+            }
+            let dbh = dbh.unwrap();
+            println!("Loaded {} as db", dbh.root_path);
+            dbs.push(dbh);
         }
-        let dbh = dbh.unwrap();
-        println!("Loaded {} as db", dbh.root_path);
-        dbs.push(dbh);
     }
     let dbs: Arc<Mutex<Vec<DbHandle>>> = Arc::new(Mutex::new(dbs));
     let dbsc = dbs.clone();

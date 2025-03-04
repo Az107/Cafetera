@@ -37,7 +37,7 @@ impl EndpointSearch for Vec<Endpoint> {
 #[derive(Serialize, Debug, Deserialize)]
 pub struct Config {
     pub endpoints: HashMap<String, Vec<Endpoint>>,
-    pub db: Vec<DB>,
+    pub db: Option<Vec<DB>>,
 }
 
 impl Config {
