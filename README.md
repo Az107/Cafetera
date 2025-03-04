@@ -1,7 +1,5 @@
-# CAFETERA ☕️
+# CAFETERA ☕️  
 [![Test](https://github.com/Az107/Cafetera/actions/workflows/test.yml/badge.svg)](https://github.com/Az107/Cafetera/actions/workflows/test.yml)
-
-## Description
 
 **Cafetera** (/kafeˈteɾa/) is a simple HTTP mock server made with [HTEAPOT](https://github.com/az107/hteapot), designed for mocking API endpoints for testing purposes. It allows you to define custom responses for different HTTP methods and routes through a TOML configuration file.
 
@@ -132,7 +130,7 @@ This request returns all users matching the specified criteria.
 #### Create
 
 ```HTTP
-PUSH /db/users/users HTTP/1.1
+POST /db/users/users HTTP/1.1
 
 {
   "age": 19,
