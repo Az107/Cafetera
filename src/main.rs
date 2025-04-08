@@ -51,6 +51,7 @@ fn main() {
     let teapot = Hteapot::new(&addr, port);
     println!("Listening on http://{}:{}", addr, port);
     teapot.listen(move|req| {
+            let body_text = req.text().unwrap_or(String::new());
             if !silent {
                 let headers: String = req.headers.iter()
                     .map(|(k, v)| format!("- {}: {}", k, v))
@@ -62,7 +63,7 @@ fn main() {
                     req.method.to_str(),
                     req.path,
                     headers,
-                    req.body
+                    body_text
                 );
 
                 println!("{}", output);
@@ -81,7 +82,7 @@ fn main() {
                 let dbh = dbs.iter_mut().find(|dbh| dbh.is_match(&req.path));
                 if dbh.is_some() {
                     let dbh = dbh.unwrap();
-                    let result = dbh.process(req.method.to_str(), req.path, req.args,req.body);
+                    let result = dbh.process(req.method.to_str(), req.path, req.args,body_text);
                     return match result {
                         Ok(r) => HttpResponse::new(HttpStatus::OK, r,None ),
                         Err(err) => HttpResponse::new(err.status, err.text ,None )
@@ -98,7 +99,7 @@ fn main() {
                             let status = HttpStatus::from_u16(endpoint.status).unwrap_or(HttpStatus::OK);
                             let mut body = endpoint.body.to_string()
                             .replace("{{path}}", &req.path)
-                            .replace("{{body}}", &req.body)
+                            .replace("{{body}}", &body_text)
                             .replace("{{rand}}", SimpleRNG::new().next_range(0, 100).to_string().as_str());
                             for (key, value) in &req.args {
                                 let _body = body.clone();
