@@ -8,13 +8,19 @@ use config_parser::{Config, EndpointSearch};
 use db_handle::DbHandle;
 use hteapot::headers;
 use hteapot::{Hteapot, HttpMethod, HttpResponse, HttpStatus};
-use utils::clean_arg;
-use utils::SimpleRNG;
+use utils::{clean_arg, print_args, SimpleRNG};
 
-// section MAIN
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() {
     let args = std::env::args().collect::<Vec<String>>();
+    if let Some(two) = args.get(2) {
+        if two == "-v" || two == "--version" {
+            println!("Cafetera {}", VERSION);
+            // println!("Hteapot {}", hteapot::VERSION);
+            return;
+        }
+    }
     if args.len() < 3 {
         println!("Usage: {} <port> <config>", args[0]);
         return;
@@ -52,6 +58,7 @@ fn main() {
     println!("Listening on http://{}:{}", addr, port);
     teapot.listen(move|req| {
             let body_text = req.text().unwrap_or(String::new());
+
             if !silent {
                 let headers: String = req.headers.iter()
                     .map(|(k, v)| format!("- {}: {}", k, v))
@@ -59,9 +66,10 @@ fn main() {
                     .join("\n");
 
                 let output = format!(
-                    "{} {}\n{}\n\n{}",
+                    "{} {}{}\n{}\n\n{}",
                     req.method.to_str(),
                     req.path,
+                    print_args(&req.args),
                     headers,
                     body_text
                 );
