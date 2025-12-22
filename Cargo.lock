@@ -154,9 +154,9 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hteapot"
-version = "0.6.0"
+version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1db7acae4c9cdc02f996b2a2379713e7354e543e0d407fbe658b5b52db780a3"
+checksum = "76692e9ada3c553fbd4b10325d9dd7a28c42867ce55ecb96d4f847e447ecaa25"
 dependencies = [
  "libc",
 ]
