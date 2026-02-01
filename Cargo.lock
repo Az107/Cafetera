@@ -37,7 +37,13 @@ checksum = "7ff69b9dd49fd426c69a0db9fc04dd934cdb6645ff000864d98f7e2af8830eaa"
 
 [[package]]
 name = "cafetera"
+<<<<<<< Updated upstream
 version = "0.6.0"
+||||||| Stash base
+version = "0.5.0"
+=======
+version = "0.6.5"
+>>>>>>> Stashed changes
 dependencies = [
  "hteapot",
  "serde",
@@ -155,8 +161,15 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 [[package]]
 name = "hteapot"
 version = "0.6.5"
+<<<<<<< Updated upstream
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "76692e9ada3c553fbd4b10325d9dd7a28c42867ce55ecb96d4f847e447ecaa25"
+||||||| Stash base
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1db7acae4c9cdc02f996b2a2379713e7354e543e0d407fbe658b5b52db780a3"
+=======
+>>>>>>> Stashed changes
 dependencies = [
  "libc",
 ]

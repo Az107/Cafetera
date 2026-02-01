@@ -6,8 +6,8 @@ use std::sync::{Arc, Mutex};
 
 use config_parser::{Config, EndpointSearch};
 use db_handle::DbHandle;
-use hteapot::headers;
-use hteapot::{Hteapot, HttpMethod, HttpResponse, HttpStatus};
+use hteapot::{headers, Hteapot, HttpMethod, HttpResponse, HttpStatus};
+use serde_json::Value;
 use utils::{clean_arg, print_args, SimpleRNG};
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -75,12 +75,15 @@ fn main() {
                 );
 
                 println!("{}", output);
-
             }
+            let star = "*";
+            let origin = req.headers.get_owned("Origin").unwrap_or(star.to_string());
+            let request_headers = req.headers.get_owned("access-control-request-headers").unwrap_or(star.to_string());
+            let mut headers = headers!("Allow" => "GET, POST, OPTIONS, HEAD", "Access-Control-Allow-Origin" => &origin, "Access-Control-Allow-Headers" => &request_headers ).unwrap();
+
             if req.method == HttpMethod::OPTIONS {
-                let star = &"*".to_string();
-                let origin = req.headers.get("Origin").unwrap_or(star);
-                return HttpResponse::new(HttpStatus::NoContent, "", headers!("Allow" => "GET, POST, OPTIONS, HEAD", "Access-Control-Allow-Origin" => origin, "Access-Control-Allow-Headers" => "Content-Type, Authorization" ));
+
+                return HttpResponse::new(HttpStatus::NoContent, "",  Some(headers));
             }
 
 
@@ -91,8 +94,9 @@ fn main() {
                 if dbh.is_some() {
                     let dbh = dbh.unwrap();
                     let result = dbh.process(req.method.to_str(), req.path, req.args,body_text);
+                    headers.insert("Content-Type", "application/json");
                     return match result {
-                        Ok(r) => HttpResponse::new(HttpStatus::OK, r,None ),
+                        Ok(r) => HttpResponse::new(HttpStatus::OK, r, Some(headers)),
                         Err(err) => HttpResponse::new(err.status, err.text ,None )
                         }
                 }
@@ -121,7 +125,10 @@ fn main() {
                                     body = _body.replace(&format!("{{{{{key}}}}}", key=key), &value);
                                 }
                             }
-                            return HttpResponse::new(status, &body,headers!("Allow" => "GET, POST, OPTIONS, HEAD", "Access-Control-Allow-Origin" => "*", "Access-Control-Allow-Headers" => "Content-Type, Authorization" ) );
+                            if  serde_json::from_str::<Value>(&body).is_ok() {
+                                headers.insert("Content-Type", "application/json");
+                            }
+                            return HttpResponse::new(status, &body,Some(headers) );
                         }
                         None => {
                             return HttpResponse::new(HttpStatus::NotFound, "Not Found", None);
