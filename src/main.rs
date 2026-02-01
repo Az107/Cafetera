@@ -10,6 +10,8 @@ use hteapot::{headers, Hteapot, HttpMethod, HttpResponse, HttpStatus};
 use serde_json::Value;
 use utils::{clean_arg, print_args, SimpleRNG};
 
+use crate::utils::now;
+
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() {
