@@ -108,7 +108,8 @@ fn main() {
                             let mut body = endpoint.body.to_string()
                             .replace("{{path}}", &req.path)
                             .replace("{{body}}", &body_text)
-                            .replace("{{rand}}", SimpleRNG::new().next_range(0, 100).to_string().as_str());
+                            .replace("{{rand}}", SimpleRNG::new().next_range(0, 100).to_string().as_str())
+                            .replace("{{now}}", &now().to_string());
                             for (key, value) in &req.args {
                                 let _body = body.clone();
                                 body = _body.replace(&format!("{{{{arg.{key}}}}}", key=key),  clean_arg(value.to_string()).as_str());

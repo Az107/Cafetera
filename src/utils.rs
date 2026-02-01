@@ -1,4 +1,7 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 pub struct SimpleRNG {
     state: u64,
@@ -122,4 +125,12 @@ pub fn print_args(args: &HashMap<String, String>) -> String {
     }
     result.pop();
     return result;
+}
+
+pub fn now() -> u64 {
+    let start = SystemTime::now();
+    let since_the_epoch = start
+        .duration_since(UNIX_EPOCH)
+        .expect("time should go forward");
+    since_the_epoch.as_secs()
 }
